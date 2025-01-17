@@ -98,21 +98,21 @@ private:
 /**
  * @brief The ApriltagDetectorUmich class
  */
-class ApriltagDetectorUmich : public ApriltagDetector {
-public:
-  explicit ApriltagDetectorUmich(const TagFamily &tag_family);
+// class ApriltagDetectorUmich : public ApriltagDetector {
+// public:
+//   explicit ApriltagDetectorUmich(const TagFamily &tag_family);
 
-  ApriltagVec DetectImpl(const cv::Mat &image) override;
+//   ApriltagVec DetectImpl(const cv::Mat &image) override;
 
-  void SetBlackBorder(int black_border) override;
-  void SetDecimate(int decimate) override;
-  void SetNThreads(int nthreads) override;
-  void PrintProfilingInfo() const override;
+//   void SetBlackBorder(int black_border) override;
+//   void SetDecimate(int decimate) override;
+//   void SetNThreads(int nthreads) override;
+//   void PrintProfilingInfo() const override;
 
-private:
-  std::shared_ptr<apriltag_umich3::apriltag_family_t> tag_family_;
-  std::shared_ptr<apriltag_umich3::apriltag_detector_t> tag_detector_;
-};
+// private:
+//   std::shared_ptr<apriltag_umich3::apriltag_family_t> tag_family_;
+//   std::shared_ptr<apriltag_umich3::apriltag_detector_t> tag_detector_;
+// };
 
 /// Draw a single apriltag on image
 void DrawApriltag(cv::Mat &image, const apriltag_msgs::msg::Apriltag &apriltag,

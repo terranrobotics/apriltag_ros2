@@ -17,7 +17,6 @@ find_package(rosidl_default_generators REQUIRED)
 
 set(ament_dependencies
   "apriltag_mit"
-  "apriltag_umich"
   "apriltag_msgs"
   "image_transport"
   "cv_bridge"
