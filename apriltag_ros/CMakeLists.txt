@@ -12,6 +12,8 @@ find_package(ament_cmake REQUIRED)
 find_package(ament_cmake_ros REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(rclcpp_components REQUIRED)
+find_package(rosidl_default_generators REQUIRED)
+
 
 set(ament_dependencies
   "apriltag_mit"
@@ -20,6 +22,8 @@ set(ament_dependencies
   "image_transport"
   "cv_bridge"
   "rclcpp"
+  "rclcpp_components"
+  "rosidl_default_generators"
   )
 foreach(pkg ${ament_dependencies})
   find_package(${pkg} REQUIRED)
