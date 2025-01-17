@@ -8,6 +8,7 @@
 namespace apriltag_ros {
 
 namespace mit = apriltag_mit;
+namespace umich = apriltag_umich3;
 
 /// ================
 /// ApriltagDetector
