@@ -4,6 +4,7 @@
 #include <image_transport/image_transport.hpp>
 #include <rclcpp/rclcpp.hpp>
 #include <sensor_msgs/msg/image.hpp>
+#include <sensor_msgs/msg/compressed_image.hpp>
 
 #include <apriltag_msgs/msg/apriltag_array_stamped.hpp>
 #include "apriltag_ros/apriltag_detector.h"
@@ -22,7 +23,7 @@ class ApriltagDetectorComponent : public rclcpp::Node {
 
  private:
   void imageCb(const Image::ConstSharedPtr &image_msg);
-  void compressedImageCb(const CompressedImage::ConstSharedPtr &image_msg);
+  void compressedImageCb(const CompressedImage::ConstSharedPtr &compressed_image_msg);
   rcl_interfaces::msg::SetParametersResult parametersCb(
       const std::vector<rclcpp::Parameter> &parameters);
   it::Subscriber sub_image_;  // subscribe to camera image

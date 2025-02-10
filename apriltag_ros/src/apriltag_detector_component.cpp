@@ -34,7 +34,7 @@ ApriltagDetectorComponent::ApriltagDetectorComponent(
                                 "raw", image_qos);
   } else {
     sub_image_ =
-        it::create_subscription(this, "image",
+        it::create_subscription(this, "compressed_image",
                                 std::bind(&ApriltagDetectorComponent::compressedImageCb,
                                           this, std::placeholders::_1),
                                 "compressed", image_qos);
@@ -131,21 +131,21 @@ void ApriltagDetectorComponent::imageCb(
 }
 
 void ApriltagDetectorComponent::compressedImageCb(
-    const CompressedImage::ConstSharedPtr &image_msg) {
+    const CompressedImage::ConstSharedPtr &compressed_image_msg) {
   if (pub_tags_->get_subscription_count() == 0 &&
       pub_disp_.getNumSubscribers() == 0) {
     return;
   }
 
   // Verify we're getting JPEG format
-  if (image_msg->format != "jpeg") {
-    RCLCPP_ERROR(get_logger(), "Unsupported compressed image format: %s", image_msg->format.c_str());
+  if (compressed_image_msg->format != "jpeg") {
+    RCLCPP_ERROR(get_logger(), "Unsupported compressed image format: %s", compressed_image_msg->format.c_str());
     return;
   }
   
   // Decode MJPEG data directly from the message
   cv::Mat uncompressed = cv::imdecode(
-    cv::Mat(image_msg->data.size(), 1, CV_8UC1, const_cast<unsigned char*>(image_msg->data.data())),
+    cv::Mat(compressed_image_msg->data.size(), 1, CV_8UC1, const_cast<unsigned char*>(compressed_image_msg->data.data())),
     cv::IMREAD_GRAYSCALE
   );
   
@@ -160,7 +160,7 @@ void ApriltagDetectorComponent::compressedImageCb(
   // publish apriltags
   if (pub_tags_->get_subscription_count() > 0) {
     auto apriltag_array_msg = std::make_shared<ApriltagArrayStamped>();
-    apriltag_array_msg->header = image_msg->header;
+    apriltag_array_msg->header = compressed_image_msg->header;
     apriltag_array_msg->apriltags = apriltags;
     pub_tags_->publish(*apriltag_array_msg);
   }
@@ -170,7 +170,7 @@ void ApriltagDetectorComponent::compressedImageCb(
     cv::Mat disp;
     cv::cvtColor(uncompressed, disp, CV_GRAY2BGR);
     DrawApriltags(disp, apriltags);
-    cv_bridge::CvImage cv_img(image_msg->header, image_encodings::BGR8, disp);
+    cv_bridge::CvImage cv_img(compressed_image_msg->header, image_encodings::BGR8, disp);
     pub_disp_.publish(cv_img.toImageMsg());
   }
 }
