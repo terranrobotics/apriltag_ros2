@@ -17,6 +17,7 @@ class ApriltagDetectorComponent : public rclcpp::Node {
  public:
   using ApriltagArrayStamped = apriltag_msgs::msg::ApriltagArrayStamped;
   typedef sensor_msgs::msg::Image Image;
+  typedef sensor_msgs::msg::CompressedImage CompressedImage;
   typedef std::shared_ptr<const Image> ImageConstPtr;
   explicit ApriltagDetectorComponent(const rclcpp::NodeOptions &options);
   ~ApriltagDetectorComponent();

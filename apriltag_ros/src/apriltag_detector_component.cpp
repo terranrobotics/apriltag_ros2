@@ -33,11 +33,11 @@ ApriltagDetectorComponent::ApriltagDetectorComponent(
                                           this, std::placeholders::_1),
                                 "raw", image_qos);
   } else {
-    sub_image_ =
-        it::create_subscription(this, "compressed_image",
-                                std::bind(&ApriltagDetectorComponent::compressedImageCb,
-                                          this, std::placeholders::_1),
-                                "compressed", image_qos);
+    sub_image_ = create_subscription<sensor_msgs::msg::CompressedImage>(
+        "image_raw/compressed", 
+        1,  // QoS history depth
+        std::bind(&ApriltagDetectorComponent::compressedImageCb,
+                  this, std::placeholders::_1));
   }
 
   RCLCPP_INFO_STREAM(get_logger(), "detector type: (MIT=0, UMICH=1): " << type);
