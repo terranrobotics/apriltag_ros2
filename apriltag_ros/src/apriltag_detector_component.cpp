@@ -149,7 +149,7 @@ void ApriltagDetectorComponent::compressedImageCb(
     cv::IMREAD_GRAYSCALE
   );
   
-  if (compressed.empty()) {
+  if (uncompressed.empty()) {
     RCLCPP_ERROR(get_logger(), "Failed to decode MJPEG image");
     return;
   }

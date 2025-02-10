@@ -27,7 +27,8 @@ class ApriltagDetectorComponent : public rclcpp::Node {
   void compressedImageCb(const CompressedImage::ConstSharedPtr &compressed_image_msg);
   rcl_interfaces::msg::SetParametersResult parametersCb(
       const std::vector<rclcpp::Parameter> &parameters);
-  it::Subscriber sub_image_;  // subscribe to camera image
+  std::variant<image_transport::Subscriber, 
+               rclcpp::Subscription<sensor_msgs::msg::CompressedImage>::SharedPtr> sub_image_;
   it::Publisher pub_disp_;    // publish debug image
   rclcpp::Publisher<ApriltagArrayStamped>::SharedPtr pub_tags_;
   ApriltagDetectorPtr detector_;
