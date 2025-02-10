@@ -15,20 +15,31 @@ using namespace sensor_msgs;
 ApriltagDetectorComponent::ApriltagDetectorComponent(
     const rclcpp::NodeOptions &options)
     : Node("tag_detector", options) {
-  const rmw_qos_profile_t qos = rmw_qos_profile_default;
-  pub_disp_ = it::create_publisher(this, "disp", qos);
-  pub_tags_ = create_publisher<ApriltagArrayStamped>("tags", 3);
-  const rmw_qos_profile_t image_qos = rmw_qos_profile_default;
-  sub_image_ =
-      it::create_subscription(this, "image",
-                              std::bind(&ApriltagDetectorComponent::imageCb,
-                                        this, std::placeholders::_1),
-                              "raw", image_qos);
   int type = declare_parameter("detector", 0);
   int family = declare_parameter("tag_family", 0);
   int decimate = declare_parameter("decimate", 1);
   int nthreads = declare_parameter("nthreads", 1);
   int black_border_width = declare_parameter("black_border_width", 1);
+  int compressed = declare_parameter("compressed", 0);
+
+  const rmw_qos_profile_t qos = rmw_qos_profile_default;
+  pub_disp_ = it::create_publisher(this, "disp", qos);
+  pub_tags_ = create_publisher<ApriltagArrayStamped>("tags", 3);
+  const rmw_qos_profile_t image_qos = rmw_qos_profile_default;
+  if (compressed == 0) {
+    sub_image_ =
+        it::create_subscription(this, "image",
+                                std::bind(&ApriltagDetectorComponent::imageCb,
+                                          this, std::placeholders::_1),
+                                "raw", image_qos);
+  } else {
+    sub_image_ =
+        it::create_subscription(this, "image",
+                                std::bind(&ApriltagDetectorComponent::compressedImageCb,
+                                          this, std::placeholders::_1),
+                                "compressed", image_qos);
+  }
+
   RCLCPP_INFO_STREAM(get_logger(), "detector type: (MIT=0, UMICH=1): " << type);
   RCLCPP_INFO_STREAM(get_logger(),
                      "tag family: (0=36h11, 1=25h9, 2=16h5): " << family);
@@ -113,6 +124,51 @@ void ApriltagDetectorComponent::imageCb(
   if (pub_disp_.getNumSubscribers() > 0) {
     cv::Mat disp;
     cv::cvtColor(gray, disp, CV_GRAY2BGR);
+    DrawApriltags(disp, apriltags);
+    cv_bridge::CvImage cv_img(image_msg->header, image_encodings::BGR8, disp);
+    pub_disp_.publish(cv_img.toImageMsg());
+  }
+}
+
+void ApriltagDetectorComponent::compressedImageCb(
+    const CompressedImage::ConstSharedPtr &image_msg) {
+  if (pub_tags_->get_subscription_count() == 0 &&
+      pub_disp_.getNumSubscribers() == 0) {
+    return;
+  }
+
+  // Verify we're getting JPEG format
+  if (image_msg->format != "jpeg") {
+    RCLCPP_ERROR(get_logger(), "Unsupported compressed image format: %s", image_msg->format.c_str());
+    return;
+  }
+  
+  // Decode MJPEG data directly from the message
+  cv::Mat uncompressed = cv::imdecode(
+    cv::Mat(image_msg->data.size(), 1, CV_8UC1, const_cast<unsigned char*>(image_msg->data.data())),
+    cv::IMREAD_GRAYSCALE
+  );
+  
+  if (compressed.empty()) {
+    RCLCPP_ERROR(get_logger(), "Failed to decode MJPEG image");
+    return;
+  }
+
+  // run detector
+  auto apriltags = detector_->Detect(uncompressed);
+
+  // publish apriltags
+  if (pub_tags_->get_subscription_count() > 0) {
+    auto apriltag_array_msg = std::make_shared<ApriltagArrayStamped>();
+    apriltag_array_msg->header = image_msg->header;
+    apriltag_array_msg->apriltags = apriltags;
+    pub_tags_->publish(*apriltag_array_msg);
+  }
+
+  // publish detection image
+  if (pub_disp_.getNumSubscribers() > 0) {
+    cv::Mat disp;
+    cv::cvtColor(uncompressed, disp, CV_GRAY2BGR);
     DrawApriltags(disp, apriltags);
     cv_bridge::CvImage cv_img(image_msg->header, image_encodings::BGR8, disp);
     pub_disp_.publish(cv_img.toImageMsg());

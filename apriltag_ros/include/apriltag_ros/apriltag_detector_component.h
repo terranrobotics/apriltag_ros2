@@ -22,6 +22,7 @@ class ApriltagDetectorComponent : public rclcpp::Node {
 
  private:
   void imageCb(const Image::ConstSharedPtr &image_msg);
+  void compressedImageCb(const CompressedImage::ConstSharedPtr &image_msg);
   rcl_interfaces::msg::SetParametersResult parametersCb(
       const std::vector<rclcpp::Parameter> &parameters);
   it::Subscriber sub_image_;  // subscribe to camera image
